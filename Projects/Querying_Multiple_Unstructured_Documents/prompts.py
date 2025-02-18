@@ -37,3 +37,36 @@ Input DataFrame Head:
 ```
 {df_details}
 ```"""
+
+NATURAL_QUERY_TO_KEY_DESCRIPTION_PROMPT = """You are given a question that queries a set of documents. Your task is to determine the relevant keys (or columns) that should be extracted from the documents to create a structured table.
+
+### Instructions:
+1. Understand the Question: Analyze the given question to determine the core information it seeks from the documents.
+2. Analyze the Documents: Identify the key pieces of information that are relevant to answering the question and structuring the data.
+3. Determine Keys: Extract a list of key attributes that should be included in the structured table. Each key should be:
+   - Relevant: Directly related to the question and the document content.
+   - Distinct: Avoid redundancy by ensuring each key represents a unique piece of information.
+   - Structured: Ensure the keys are structured in a way that enables easy data processing and tabular representation.
+4. Provide a Description: For each key, provide a brief description explaining its purpose and the type of data it holds.
+5. Keep the keys such that the question can be converted to an SQL style query using the derived keys to answer the question.
+6. Do not mention filtering criteria or question specific conditions in description itself.
+7. Remember this key-description will be sent to another prompt to extract the values for these keys from the documents. So keep the keys generic and not specific to the input question.
+8. Try to keep the values as string, numbers, etc and not complex types like list, json so querying is easy and fast. Better to have more keys.
+
+Input query:
+```
+{natural_query}
+```
+
+### Output Format:
+key: <Yey that needs to be extracted. Do not keep spaces, use underscore if needed.>
+description: <Description about that key, its type and what it represents>
+reason: <How this key would be useful in answering the query>
+
+key: <Yey that needs to be extracted. Do not keep spaces, use underscore if needed.>
+description: <Description about that key, its type and what it represents>
+reason: <How this key would be useful in answering the query>
+
+key: <Yey that needs to be extracted. Do not keep spaces, use underscore if needed.>
+description: <Description about that key, its type and what it represents>
+reason: <How this key would be useful in answering the query>"""
