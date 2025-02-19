@@ -7,14 +7,14 @@ load_dotenv()
 from utils import extract_pdf_info, get_filtered_df, generate_key_description_pairs
 
 # Streamlit UI
-st.title("Batch PDF Processing with Ollama")
-st.markdown("Upload multiple PDF files and provide key-description pairs to process them.")
+st.title("Structured Querying for Multiple Unstructured Documents")
+st.markdown("Upload multiple PDF files and question them across the files")
 
 # Sidebar for inputs
 with st.sidebar:
-    st.header("Input Settings")
+    st.header("Files Upload")
     
-    uploaded_files = st.file_uploader("Upload PDF files", type=["pdf"], accept_multiple_files=True)
+    uploaded_files = st.file_uploader("Upload multiple PDF files", type=["pdf"], accept_multiple_files=True)
     
     # Query input field
     st.markdown("### Query")
@@ -39,20 +39,24 @@ with st.sidebar:
     
     # Display key-description pairs
     if "key_descriptions" in st.session_state:
-        st.markdown("### Extracted Key-Description Pairs")
+        st.markdown("---")
+        st.markdown("### Generated Key-Description Pairs")
         for key, description in st.session_state.key_descriptions:
             st.write(f"**{key}:** {description}")
-    
+
     if "df_query" in st.session_state:
+        st.markdown("---")
         st.markdown("### Generated DataFrame Query")
         st.code(st.session_state.df_query)
 
 # Display DataFrame when generated
 dataframe_placeholder = st.empty()
 if "df" in st.session_state:
+    st.header("Complete DataFrame")
     dataframe_placeholder.dataframe(st.session_state.df, use_container_width=True)
 
 # Display DataFrame when generated
 dataframe_placeholder = st.empty()
 if "filtered_df" in st.session_state:
+    st.header("Filtered DataFrame")
     dataframe_placeholder.dataframe(st.session_state.filtered_df, use_container_width=True)
