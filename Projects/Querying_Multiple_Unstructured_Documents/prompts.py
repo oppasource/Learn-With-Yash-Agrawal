@@ -2,6 +2,8 @@ SYSTEM_PROMPT = """Following is the text extracted from a PDF. It may or may not
 
 Today's date is {today_date} for your reference.
 
+IMPORTANT: Stick to the datatypes mentioned in the description. If it is numeric only add numbers and do not put units against it becaue it will be converted to that data type.
+
 ```
 {key_value_descriptions}
 ```
@@ -28,6 +30,8 @@ NATURAL_TO_PANDAS_QUERY_PROMPT = """You are given a natural language query and t
 **Output format:**
 - A valid pandas `.query()` string without additional quotes or formatting. Just put the query between backticks `<query>`.
 
+IMPORTANT: all fields in df are string, so use astype in query if any other type is needed for comparison. Dont forget to add proper quotes around datatype in astype.
+
 Input Query:
 ```
 {natural_query}
@@ -51,7 +55,8 @@ NATURAL_QUERY_TO_KEY_DESCRIPTION_PROMPT = """You are given a question that queri
 5. Keep the keys such that the question can be converted to an SQL style query using the derived keys to answer the question.
 6. Do not mention filtering criteria or question specific conditions in description itself.
 7. Remember this key-description will be sent to another prompt to extract the values for these keys from the documents. So keep the keys generic and not specific to the input question.
-8. Try to keep the values as string, numbers, etc and not complex types like list, json so querying is easy and fast. Better to have more keys.
+8. Try to keep the datatypes of values simple: mostly as string, numbers, etc and not complex types like list, json so querying is easy and fast. Better to have more keys than to try and fit everything in one key.
+9. Speak about datatype as well in the description.
 
 Input query:
 ```
@@ -61,12 +66,12 @@ Input query:
 ### Output Format:
 key: <Yey that needs to be extracted. Do not keep spaces, use underscore if needed.>
 description: <Description about that key, its type and what it represents>
-reason: <How this key would be useful in answering the query>
+utilized for: <How it can be utilized to address the query>
 
 key: <Yey that needs to be extracted. Do not keep spaces, use underscore if needed.>
 description: <Description about that key, its type and what it represents>
-reason: <How this key would be useful in answering the query>
+utilized for: <How it can be utilized to address the query>
 
 key: <Yey that needs to be extracted. Do not keep spaces, use underscore if needed.>
 description: <Description about that key, its type and what it represents>
-reason: <How this key would be useful in answering the query>"""
+utilized for: <How it can be utilized to address the query>"""
