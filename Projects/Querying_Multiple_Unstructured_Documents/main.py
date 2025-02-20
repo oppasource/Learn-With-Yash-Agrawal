@@ -25,38 +25,47 @@ with st.sidebar:
         key_description_pairs = generate_key_description_pairs(query)
         st.session_state.key_descriptions = key_description_pairs
         
-        extracted_info = extract_pdf_info(uploaded_files, key_description_pairs)
-        
-        if extracted_info:
-            st.session_state.df = pd.DataFrame(extracted_info)
-
-            df_query, filtered_df = get_filtered_df(st.session_state.df, query)
-            st.session_state.df_query = df_query
-
-            st.session_state.filtered_df = filtered_df
-        else:
-            st.error("No data extracted. Please upload valid PDF files.")
-    
     # Display key-description pairs
     if "key_descriptions" in st.session_state:
         st.markdown("---")
         st.markdown("### Generated Key-Description Pairs")
+        
         for key, description in st.session_state.key_descriptions:
-            st.write(f"**{key}:** {description}")
+            with st.expander(f"**{key}**"):
+                st.write(description)
+        
+        extracted_info = extract_pdf_info(uploaded_files, st.session_state.key_descriptions)
 
-    if "df_query" in st.session_state:
-        st.markdown("---")
-        st.markdown("### Generated DataFrame Query")
-        st.code(st.session_state.df_query)
+        if extracted_info:
+            st.session_state.df = pd.DataFrame(extracted_info)
+        else:
+            st.error("No data extracted. Please upload valid PDF files.")
+
+    query_placeholder_design_1 = st.empty()
+    query_placeholder_design_2 = st.empty()
+    query_placeholder = st.empty()
+    # if "df_query" in st.session_state:
+    #     st.markdown("---")
+    #     st.markdown("### Generated DataFrame Query")
+    #     query_placeholder.code(st.session_state.df_query)
 
 # Display DataFrame when generated
-dataframe_placeholder = st.empty()
+# dataframe_placeholder = st.empty()
 if "df" in st.session_state:
     st.header("Complete DataFrame")
-    dataframe_placeholder.dataframe(st.session_state.df, use_container_width=True)
+    st.dataframe(st.session_state.df, use_container_width=True)
+
+    df_query, filtered_df = get_filtered_df(st.session_state.df, query)
+
+    st.session_state.filtered_df = filtered_df
+
+    query_placeholder_design_1.markdown("---")
+    query_placeholder_design_2.markdown("### Generated DataFrame Query")
+    query_placeholder.code(df_query)
+
 
 # Display DataFrame when generated
-dataframe_placeholder = st.empty()
+# dataframe_placeholder = st.empty()
 if "filtered_df" in st.session_state:
     st.header("Filtered DataFrame")
-    dataframe_placeholder.dataframe(st.session_state.filtered_df, use_container_width=True)
+    st.dataframe(st.session_state.filtered_df, use_container_width=True)
