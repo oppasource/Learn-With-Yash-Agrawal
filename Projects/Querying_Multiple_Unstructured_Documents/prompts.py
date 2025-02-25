@@ -1,47 +1,3 @@
-SYSTEM_PROMPT = """Following is the text extracted from a PDF. It may or may not be properly structured since it is converted to text. Your job is to extract (key, value) information pairs. The description of keys we want to extract values for is given below
-
-Today's date is {today_date} for your reference.
-
-IMPORTANT: Stick to the datatypes mentioned in the description. If it is numeric only add numbers and do not put units against it becaue it will be converted to that data type.
-
-```
-{key_value_descriptions}
-```
-
-The output format MUST follow the following pattern:
-<key>: <value>
-<key>: <value>
-<key>: <value>
-
-If value extraction is not possible or not available for any key, then just give "null" as the value for that key.
-
-Input PDF text:
-```
-{pdf_text}
-```"""
-
-
-NATURAL_TO_PANDAS_QUERY_PROMPT = """You are given a natural language query and the first few rows of a pandas DataFrame. Your task is to generate a valid pandas `.query()` string that will be passed directly to `df.query()`. The output should strictly be the query string without additional explanations.
-
-**Input format:**
-- **Query:** A natural language request describing the filtering condition.
-- **DataFrame Head:** The first 5 rows of the DataFrame converted to a dictionary using `df.head(5).to_dict()`.
-
-**Output format:**
-- A valid pandas `.query()` string without additional quotes or formatting. Just put the query between backticks `<query>`.
-
-IMPORTANT: all fields in df are string, so use astype in query if any other type is needed for comparison. Dont forget to add proper quotes around datatype in astype.
-
-Input Query:
-```
-{natural_query}
-```
-
-Input DataFrame Head:
-```
-{df_details}
-```"""
-
 NATURAL_QUERY_TO_KEY_DESCRIPTION_PROMPT = """You are given a question that queries a set of documents. Your task is to determine the relevant keys (or columns) that should be extracted from the documents to create a structured table.
 
 ### Instructions:
@@ -75,3 +31,48 @@ utilized for: <How it can be utilized to address the query>
 key: <Yey that needs to be extracted. Do not keep spaces, use underscore if needed.>
 description: <Description about that key, its type and what it represents>
 utilized for: <How it can be utilized to address the query>"""
+
+
+EXTRACT_INFORMATION_FROM_TEXT_PROMPT = """Following is the text extracted from a PDF. It may or may not be properly structured since it is converted to text. Your job is to extract (key, value) information pairs. The description of keys we want to extract values for is given below
+
+Today's date is {today_date} for your reference.
+
+IMPORTANT: Stick to the datatypes mentioned in the description. If it is numeric only add numbers and do not put units against it becaue it will be converted to that data type.
+
+```
+{key_value_descriptions}
+```
+
+The output format MUST follow the following pattern:
+<key>: <value>
+<key>: <value>
+<key>: <value>
+
+If value extraction is not possible or not available for any key, then just give "null" as the value for that key.
+
+Input PDF text:
+```
+{pdf_text}
+```"""
+
+
+NATURAL_QUERY_TO_PANDAS_QUERY_PROMPT = """You are given a natural language query and the first few rows of a pandas DataFrame. Your task is to generate a valid pandas `.query()` string that will be passed directly to `df.query()`. The output should strictly be the query string without additional explanations.
+
+**Input format:**
+- **Query:** A natural language request describing the filtering condition.
+- **DataFrame Head:** The first 5 rows of the DataFrame converted to a dictionary using `df.head(5).to_dict()`.
+
+**Output format:**
+- A valid pandas `.query()` string without additional quotes or formatting. Just put the query between backticks `<query>`. Do not give any explanation or context, just the query.
+
+IMPORTANT: all fields in df are string, so use astype in query if any other type is needed for comparison. Dont forget to add proper quotes around datatype in astype. Also handle null values properly in query.
+
+Input Query:
+```
+{natural_query}
+```
+
+Input DataFrame Head:
+```
+{df_details}
+```"""
