@@ -1,6 +1,5 @@
 import io
 import PyPDF2
-import ollama
 from openai import OpenAI
 import re
 import uuid
