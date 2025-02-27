@@ -23,3 +23,5 @@ streamlit run main.py
 - Upload multiple PDF files using the provided interface.
 - Start querying the documents using natural language to extract relevant information.
 
+## Video Demo  
+Watch the demo full walkthrough of this project here: https://youtu.be/WnG36xiMJ30
