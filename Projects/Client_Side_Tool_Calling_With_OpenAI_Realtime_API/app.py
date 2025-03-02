@@ -2,8 +2,6 @@ import streamlit as st
 import threading
 import os
 import logging
-import base64
-import sys
 from dotenv import load_dotenv
 from streamlit_autorefresh import st_autorefresh
 from utils import Realtime
