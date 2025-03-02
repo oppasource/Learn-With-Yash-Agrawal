@@ -39,3 +39,6 @@ messages=[
 
 print(response.message.content)
 ```
+
+## Video Demo  
+Watch the demo full walkthrough of this project here: https://youtu.be/mRmhJWKJ3co
