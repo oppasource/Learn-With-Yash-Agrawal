@@ -174,13 +174,13 @@ class Realtime:
                         {
                             "type": "function",
                             "name": "update_screen_html",
-                            "description": "Used to update the html on the screen.",
+                            "description": "Used to update the HTML on the screen.",
                             "parameters": {
                                 "type": "object",
                                 "properties": {
                                     "html_code": {
                                         "type": "string",
-                                        "description": "The HTML code to update the screen with. This HTML is passed in streamlit using st.html to render so keep the html code simple. Content is not iframed. Executing JavaScript is not supported",
+                                        "description": "The HTML code to update the screen with. This HTML is passed in streamlit using st.html() to render so keep the html code simple. Content in st.html is not iframed. Executing JavaScript is not supported. Dont give svg as well, it does not get rendered correctly.",
                                     }
                                 },
                                 "required": ["html_code"],

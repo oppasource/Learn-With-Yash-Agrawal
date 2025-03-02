@@ -17,6 +17,7 @@ st_autorefresh(interval=1000, key="file_refresh")
 
 
 # Read content from file to display, this file is written by agent thread that runs in the background
+# This is just a workaround for building a POC and not prefered way in production because of the way streamlit works
 def read_file():
     with open("html_display_code.txt", "r") as f:
         return f.read().strip()
