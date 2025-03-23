@@ -19,3 +19,7 @@ The client will connect to the server and demonstrate the following:
 - Calling tools.
 - Fetching list of resources and accessing them.
 - Fetching list of prompts and accessing them.
+
+
+## Video Demo  
+Watch the demo full walkthrough of this project here: https://youtu.be/-WogqfxWBbM
