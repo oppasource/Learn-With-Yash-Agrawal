@@ -16,4 +16,4 @@ streamlit run main.py
 ```
 
 ## Video Demo  
-Watch the demo full walkthrough of this project here: https://youtu.be/QPd-vhnr7N4
+Watch the demo full walkthrough of this project here: https://youtu.be/_2SLCVPQVuU
