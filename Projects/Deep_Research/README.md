@@ -14,3 +14,6 @@ To run the Streamlit app, execute the following command in the terminal:
 ```bash
 streamlit run main.py
 ```
+
+## Video Demo  
+Watch the demo full walkthrough of this project here: https://youtu.be/QPd-vhnr7N4
