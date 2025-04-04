@@ -1,8 +1,12 @@
 import streamlit as st
 import asyncio
 import json
-from mcp_client import chat, list_all_tools, filter_input_schema
-from mcp import StdioServerParameters
+from mcp_client import (
+    chat,
+    ConnectionManager,
+    filter_input_schema,
+    StdioServerParameters,
+)
 
 # Streamlit app title
 st.title("MCP Client")
@@ -61,9 +65,9 @@ for message in st.session_state.messages:
 
 
 # Async function to handle chat and stream messages
-async def handle_chat():
+async def handle_chat(connection_manager):
     # Fetch available tools from configured servers
-    tool_map, tool_objects = await list_all_tools(stdio_server_map, sse_server_map)
+    tool_map, tool_objects = await connection_manager.list_tools()
     tools_json = [
         {
             "type": "function",
@@ -82,8 +86,7 @@ async def handle_chat():
         st.session_state.messages,
         tool_map,
         tools=tools_json,
-        stdio_server_map=stdio_server_map,
-        sse_server_map=sse_server_map,
+        connection_manager=connection_manager,
     ):
         yield response
 
@@ -100,9 +103,17 @@ if user_message := st.chat_input("Your Message"):
         response_container = st.chat_message("assistant")
 
         async def stream_responses():
-            # Stream assistant responses and update chat history
-            async for response in handle_chat():
-                response_container.markdown(response["content"])
-                st.session_state.messages.append(response)
+            # Initialize ConnectionManager
+            connection_manager = ConnectionManager(stdio_server_map, sse_server_map)
+            await connection_manager.initialize()
+
+            try:
+                # Stream assistant responses and update chat history
+                async for response in handle_chat(connection_manager):
+                    response_container.markdown(response["content"])
+                    st.session_state.messages.append(response)
+            finally:
+                # Ensure connections are closed
+                await connection_manager.close()
 
         asyncio.run(stream_responses())

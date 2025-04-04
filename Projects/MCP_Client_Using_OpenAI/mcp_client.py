@@ -1,4 +1,5 @@
 import asyncio
+from contextlib import AsyncExitStack
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 from mcp.client.sse import sse_client
@@ -12,65 +13,60 @@ load_dotenv()
 client = OpenAI()
 
 
-# Fetch tools from SSE servers
-async def list_sse_tools(sse_server_map):
-    tool_map = {}
-    consolidated_tools = []
-    for server_name, url in sse_server_map.items():
-        async with sse_client(url=url) as streams:
-            async with ClientSession(*streams) as session:
-                await session.initialize()
-                tools = await session.list_tools()
-                tool_map.update({tool.name: server_name for tool in tools.tools})
-                consolidated_tools.extend(tools.tools)
-    return tool_map, consolidated_tools
+class ConnectionManager:
+    def __init__(self, stdio_server_map, sse_server_map):
+        self.stdio_server_map = stdio_server_map
+        self.sse_server_map = sse_server_map
+        self.sessions = {}
+        self.exit_stack = AsyncExitStack()
 
+    async def initialize(self):
+        # Initialize stdio connections
+        for server_name, params in self.stdio_server_map.items():
+            stdio_transport = await self.exit_stack.enter_async_context(
+                stdio_client(params)
+            )
+            read, write = stdio_transport
+            session = await self.exit_stack.enter_async_context(
+                ClientSession(read, write)
+            )
+            await session.initialize()
+            self.sessions[server_name] = session
 
-# Fetch tools from stdio servers
-async def list_stdio_tools(stdio_server_map):
-    tool_map = {}
-    consolidated_tools = []
-    for server_name, params in stdio_server_map.items():
-        async with stdio_client(params) as (read, write):
-            async with ClientSession(read, write) as session:
-                await session.initialize()
-                tools = await session.list_tools()
-                tool_map.update({tool.name: server_name for tool in tools.tools})
-                consolidated_tools.extend(tools.tools)
-    return tool_map, consolidated_tools
+        # Initialize SSE connections
+        for server_name, url in self.sse_server_map.items():
+            sse_transport = await self.exit_stack.enter_async_context(
+                sse_client(url=url)
+            )
+            read, write = sse_transport
+            session = await self.exit_stack.enter_async_context(
+                ClientSession(read, write)
+            )
+            await session.initialize()
+            self.sessions[server_name] = session
 
+    async def list_tools(self):
+        tool_map = {}
+        consolidated_tools = []
+        for server_name, session in self.sessions.items():
+            tools = await session.list_tools()
+            tool_map.update({tool.name: server_name for tool in tools.tools})
+            consolidated_tools.extend(tools.tools)
+        return tool_map, consolidated_tools
 
-# Consolidate tools from both SSE and stdio servers
-async def list_all_tools(stdio_server_map, sse_server_map):
-    sse_tool_map, sse_tools = await list_sse_tools(sse_server_map)
-    stdio_tool_map, stdio_tools = await list_stdio_tools(stdio_server_map)
-    consolidated_tools = sse_tools + stdio_tools
-    tool_map = {**sse_tool_map, **stdio_tool_map}
-    return tool_map, consolidated_tools
+    async def call_tool(self, tool_name, arguments, tool_map):
+        server_name = tool_map.get(tool_name)
+        if not server_name:
+            print(f"Tool '{tool_name}' not found.")
+            return
 
+        session = self.sessions.get(server_name)
+        if session:
+            result = await session.call_tool(tool_name, arguments=arguments)
+            return result.content[0].text
 
-# Call a specific tool based on its name and arguments
-async def call_tool(tool_name, arguments, tool_map, stdio_server_map, sse_server_map):
-    server_name = tool_map.get(tool_name)
-    if not server_name:
-        print(f"Tool '{tool_name}' not found.")
-        return
-
-    if server_name in sse_server_map:
-        url = sse_server_map[server_name]
-        async with sse_client(url=url) as streams:
-            async with ClientSession(*streams) as session:
-                await session.initialize()
-                result = await session.call_tool(tool_name, arguments=arguments)
-                return result.content[0].text
-
-    elif server_name in stdio_server_map:
-        params = stdio_server_map[server_name]
-        async with stdio_client(params) as (read, write):
-            async with ClientSession(read, write) as session:
-                await session.initialize()
-                result = await session.call_tool(tool_name, arguments=arguments)
-                return result.content[0].text
+    async def close(self):
+        await self.exit_stack.aclose()
 
 
 # Chat function to handle interactions and tool calls
@@ -79,8 +75,7 @@ async def chat(
     tool_map,
     tools=[],
     max_turns=10,
-    stdio_server_map=None,
-    sse_server_map=None,
+    connection_manager=None,
 ):
     chat_messages = input_messages[:]
     for _ in range(max_turns):
@@ -102,8 +97,8 @@ async def chat(
                 yield {"role": "assistant", "content": log_message}
 
                 # Call the tool and log its observation
-                observation = await call_tool(
-                    tool_name, tool_args, tool_map, stdio_server_map, sse_server_map
+                observation = await connection_manager.call_tool(
+                    tool_name, tool_args, tool_map
                 )
                 log_message = f"**Tool Observation**  \n**Tool Name:** `{tool_name}`  \n**Output:**  \n```json\n{json.dumps(observation, indent=2)}\n```  \n---"
                 yield {"role": "assistant", "content": log_message}
@@ -167,40 +162,41 @@ if __name__ == "__main__":
         "python_executor_mcp": "ws://localhost:8090/sse",
     }
 
-    # Fetch tools and start chat
-    tool_map, tool_objects = asyncio.run(
-        list_all_tools(stdio_server_map, sse_server_map)
-    )
+    async def main():
+        connection_manager = ConnectionManager(stdio_server_map, sse_server_map)
+        await connection_manager.initialize()
 
-    tools_json = [
-        {
-            "type": "function",
-            "function": {
-                "name": tool.name,
-                "description": tool.description,
-                "strict": True,
-                "parameters": filter_input_schema(tool.inputSchema),
+        tool_map, tool_objects = await connection_manager.list_tools()
+
+        tools_json = [
+            {
+                "type": "function",
+                "function": {
+                    "name": tool.name,
+                    "description": tool.description,
+                    "strict": True,
+                    "parameters": filter_input_schema(tool.inputSchema),
+                },
+            }
+            for tool in tool_objects
+        ]
+
+        input_messages = [
+            {
+                "role": "system",
+                "content": "You can use one tool at a time and keep using tools until you reach the final objective.",
             },
-        }
-        for tool in tool_objects
-    ]
+            {"role": "user", "content": "which directory you have access to?"},
+        ]
 
-    input_messages = [
-        {
-            "role": "system",
-            "content": "You can use one tool at a time and keep using tools until you reach the final objective.",
-        },
-        {"role": "user", "content": "which directory you have access to?"},
-    ]
-
-    async def run_chat():
         async for response in chat(
             input_messages,
             tool_map,
             tools=tools_json,
-            stdio_server_map=stdio_server_map,
-            sse_server_map=sse_server_map,
+            connection_manager=connection_manager,
         ):
             print(response)
 
-    asyncio.run(run_chat())
+        await connection_manager.close()
+
+    asyncio.run(main())
