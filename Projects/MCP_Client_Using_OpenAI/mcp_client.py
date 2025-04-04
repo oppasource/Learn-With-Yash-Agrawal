@@ -152,7 +152,7 @@ if __name__ == "__main__":
             args=[
                 "-y",
                 "@modelcontextprotocol/server-filesystem",
-                "/Users/yash/Documents/copy/Learn-With-Yash-Agrawal/Projects/MCP_Client_Using_OpenAI/sample",
+                "/path/to/your/filesystem",
             ],
             env=None,
         ),
