@@ -19,14 +19,9 @@ stdio_servers = st.sidebar.text_area(
     "Stdio Servers (JSON format)",
     value=json.dumps(
         {
-            "filesystem_mcp": {
-                "command": "npx",
-                "args": [
-                    "-y",
-                    "@modelcontextprotocol/server-filesystem",
-                    "/path/to/your/filesystem",
-                ],
-                "env": None,
+            "time_mcp": {
+                "command": "uvx",
+                "args": ["mcp-server-time", "--local-timezone", "Asia/Kolkata"],
             }
         },
         indent=4,
@@ -37,7 +32,7 @@ stdio_servers = st.sidebar.text_area(
 sse_servers = st.sidebar.text_area(
     "SSE Servers (JSON format)",
     value=json.dumps(
-        {"python_executor_mcp": "ws://localhost:8090/sse"},
+        {"python_executor_mcp": "http://localhost:8090/sse"},
         indent=4,
     ),
 )
@@ -55,7 +50,7 @@ except json.JSONDecodeError:
 
 # Initialize chat history if not already present
 if "messages" not in st.session_state:
-    system_message = "You can use one tool at a time and keep using tools until you reach the final objective."
+    system_message = "You have a very sassy and sarcastic attitude, so respond accordingly. Keep using the tools until you reach the final objective."
     st.session_state.messages = [{"role": "system", "content": system_message}]
 
 # Display chat messages from history

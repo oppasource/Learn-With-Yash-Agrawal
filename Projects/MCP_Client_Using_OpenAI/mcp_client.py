@@ -92,15 +92,18 @@ async def chat(
                 tool_name = tool_call.function.name
                 tool_args = json.loads(tool_call.function.arguments)
 
+                # Get server name for the tool just for logging
+                server_name = tool_map.get(tool_name, "")
+
                 # Log tool call
-                log_message = f"**Tool Call**  \n**Tool Name:** `{tool_name}`  \n**Input:**  \n```json\n{json.dumps(tool_args, indent=2)}\n```"
+                log_message = f"**Tool Call**  \n**Tool Name:** `{tool_name}` from **MCP Server**: `{server_name}`  \n**Input:**  \n```json\n{json.dumps(tool_args, indent=2)}\n```"
                 yield {"role": "assistant", "content": log_message}
 
                 # Call the tool and log its observation
                 observation = await connection_manager.call_tool(
                     tool_name, tool_args, tool_map
                 )
-                log_message = f"**Tool Observation**  \n**Tool Name:** `{tool_name}`  \n**Output:**  \n```json\n{json.dumps(observation, indent=2)}\n```  \n---"
+                log_message = f"**Tool Observation**  \n**Tool Name:** `{tool_name}` from **MCP Server**: `{server_name}`  \n**Output:**  \n```json\n{json.dumps(observation, indent=2)}\n```  \n---"
                 yield {"role": "assistant", "content": log_message}
 
                 chat_messages.append(
@@ -147,19 +150,19 @@ def filter_input_schema(input_schema):
 if __name__ == "__main__":
     # Define stdio and SSE server configurations
     stdio_server_map = {
-        "filesystem_mcp": StdioServerParameters(
-            command="npx",
+        "time_mcp": StdioServerParameters(
+            command="uvx",
             args=[
-                "-y",
-                "@modelcontextprotocol/server-filesystem",
-                "/path/to/your/filesystem",
+                "mcp-server-time",
+                "--local-timezone",
+                "Asia/Kolkata",
             ],
             env=None,
         ),
     }
 
     sse_server_map = {
-        "python_executor_mcp": "ws://localhost:8090/sse",
+        "python_executor_mcp": "http://localhost:8090/sse",
     }
 
     async def main():
@@ -184,9 +187,9 @@ if __name__ == "__main__":
         input_messages = [
             {
                 "role": "system",
-                "content": "You can use one tool at a time and keep using tools until you reach the final objective.",
+                "content": "You have a very sassy and sarcastic attitude, so respond accordingly. Keep using the tools until you reach the final objective.",
             },
-            {"role": "user", "content": "which directory you have access to?"},
+            {"role": "user", "content": "whats the time right now in india?"},
         ]
 
         async for response in chat(
