@@ -126,6 +126,8 @@ async def chat(
 
 
 # Filter and validate input schema for tools
+# Perform validation checks and corrections to schema, as some servers may not follow the specifications
+# Ideally, this should not be needed
 def filter_input_schema(input_schema):
     if "properties" in input_schema:
         if "required" not in input_schema or not isinstance(
