@@ -11,3 +11,12 @@ To run the Streamlit app, execute the following command in the terminal:
 ```bash
 streamlit run main.py
 ```
+
+## MCP Servers Used
+This project interacts with the following MCP servers:
+- [Pydantic AI MCP Server](https://github.com/pydantic/pydantic-ai/tree/main/mcp-run-python)
+- [Filesystem MCP Server](https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem)
+- [Time MCP Server](https://github.com/modelcontextprotocol/servers/tree/main/src/time)
+
+## Video Demo
+Watch the demo full walkthrough of this project here: https://youtu.be/eZqzSeVBBDw
